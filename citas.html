@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citas Quirúrgicas — Pacífica Salud</title>
+<style>
+  :root{
+    --bg:#F5F7F6; --surface:#FFFFFF; --ink:#16302E; --muted:#5F7472;
+    --teal:#0F4C4C; --teal-dark:#0A3838; --steel:#3D7A8C; --line:#D8E1DF;
+    --implant:#B3423A; --implant-bg:#FBEBEA; --warn:#B07C1F; --warn-bg:#FBF2E2;
+    --ok:#2E7D5B; --ok-bg:#E9F5EF;
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "SF Mono", "Consolas", "Menlo", "IBM Plex Mono", monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;min-height:100vh;}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 20px 80px;}
+  .hidden{display:none !important;}
+
+  #loginView{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .login-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:36px 32px;max-width:360px;width:100%;text-align:center;}
+  .login-card h1{font-size:16px;color:var(--teal-dark);margin:0 0 6px;font-weight:700;}
+  .login-card .eyebrow{font-family:var(--font-mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:16px;}
+  .login-card input{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:8px;font-size:16px;text-align:center;font-family:var(--font-mono);color:var(--ink);margin-bottom:14px;}
+  .login-card input:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(61,122,140,.15);}
+  .login-msg{font-size:12.5px;margin-top:12px;min-height:16px;}
+  .login-msg.err{color:var(--implant);}
+  .login-msg.ok{color:var(--ok);}
+  .login-msg.warn, .login-msg.info{color:var(--muted);}
+
+  header.app-header{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:16px;margin-bottom:20px;border-bottom:2px solid var(--teal);}
+  header.app-header .eyebrow{font-family:var(--font-mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:2px;}
+  header.app-header h1{font-size:18px;margin:0;color:var(--teal-dark);font-weight:700;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .topbar button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--font-ui);}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:20px;}
+  .card h2{font-size:14px;margin:0 0 16px;color:var(--teal-dark);}
+
+  .menu-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:14px;cursor:pointer;text-align:left;}
+  .menu-card:hover{border-color:var(--steel);}
+  .menu-card h3{margin:0 0 4px;font-size:15px;color:var(--teal-dark);}
+  .menu-card p{margin:0;font-size:12.5px;color:var(--muted);}
+
+  .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+  .dash-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 8px;text-align:center;}
+  .dash-num{font-size:26px;font-weight:800;color:var(--teal-dark);font-family:var(--font-mono);}
+  .dash-label{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.3;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;}
+  .field input, .field select, .field textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:7px;font-size:14px;font-family:var(--font-ui);color:var(--ink);background:#fff;}
+  .field input{font-family:var(--font-mono);}
+  .field textarea{font-family:var(--font-ui);min-height:70px;resize:vertical;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(61,122,140,.15);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .hint{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  .btn{appearance:none;border:none;border-radius:7px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-ui);width:100%;margin-bottom:10px;}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-secondary{background:#fff;color:var(--steel);border:1px solid var(--steel);}
+  .btn-danger{background:#fff;color:var(--implant);border:1px solid var(--implant);}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
+
+  .msgbox{border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;}
+  .msgbox.err{background:var(--implant-bg);color:var(--implant);border:1px solid var(--implant);}
+  .msgbox.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok);}
+  .msgbox.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);}
+
+  .flag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+  .empty-state{text-align:center;padding:30px 10px;color:var(--muted);font-size:13px;}
+
+  .catalog-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .catalog-item:last-child{border-bottom:none;}
+  .catalog-item .meta{flex:1;min-width:0;}
+  .catalog-item .meta .name{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .catalog-item .meta .sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:2px;}
+  .catalog-item .actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+  .catalog-item .actions button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font-ui);}
+
+  .typeahead-wrap{position:relative;}
+  .typeahead-list{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--line);border-radius:8px;max-height:220px;overflow-y:auto;z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.08);}
+  .typeahead-list .item{padding:10px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line);}
+  .typeahead-list .item:last-child{border-bottom:none;}
+  .typeahead-list .item:hover{background:var(--bg);}
+  .typeahead-list .item .sub{font-size:11px;color:var(--muted);}
+  .typeahead-empty{padding:10px 12px;font-size:12.5px;color:var(--muted);}
+
+  /* Calendario mensual */
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .cal-nav button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-size:16px;cursor:pointer;}
+  .cal-nav .mes-label{font-size:15px;font-weight:700;color:var(--teal-dark);text-transform:capitalize;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{font-size:10px;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase;padding-bottom:4px;}
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid transparent;}
+  .cal-day.otro-mes{color:#C6D2D0;cursor:default;}
+  .cal-day.actual{background:var(--bg);color:var(--ink);}
+  .cal-day.actual:hover{border-color:var(--steel);}
+  .cal-day.hoy{border:1.5px solid var(--teal);font-weight:800;}
+
+  /* Vista de día — 24 horas */
+  .dia-slot{display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .dia-slot:last-child{border-bottom:none;}
+  .dia-slot:hover{background:var(--bg);}
+  .dia-slot .hora{font-family:var(--font-mono);font-size:13px;color:var(--muted);width:48px;flex-shrink:0;}
+  .dia-slot.horario-regular{background:#FAFCFB;}
+  .dia-slot .contenido{flex:1;min-width:0;}
+  .dia-slot .contenido .libre{color:var(--muted);font-size:12.5px;}
+  .dia-slot.ocupada-pendiente{background:var(--implant-bg);}
+  .dia-slot.ocupada-pendiente .hora{color:var(--implant);}
+  .dia-slot.ocupada-completada{background:var(--ok-bg);}
+  .dia-slot.ocupada-completada .hora{color:var(--ok);}
+  .dia-slot .contenido .nombre-proc{font-size:13px;font-weight:600;}
+  .dia-slot .contenido .sub-proc{font-size:11px;color:var(--muted);}
+
+  @media (max-width:520px){ .row2{grid-template-columns:1fr;} .dash-grid{grid-template-columns:1fr 1fr;} }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginView">
+  <div class="login-card">
+    <span class="eyebrow">Pacífica Salud · Citas Quirúrgicas</span>
+    <h1>Iniciar sesión</h1>
+    <input type="text" id="loginUsuario" placeholder="Usuario" autocomplete="off">
+    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="off">
+    <button class="btn btn-primary" onclick="intentarLogin()">Entrar</button>
+    <div class="login-msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ============ MENÚ PRINCIPAL ============ -->
+<div class="wrap hidden" id="menuView">
+  <header class="app-header">
+    <div>
+      <span class="eyebrow">Pacífica Salud · Citas Quirúrgicas</span>
+      <h1>Agenda Quirúrgica</h1>
+      <p class="hint" style="margin-top:2px;">Conectado como <b id="dashNombreUsuario"></b></p>
+    </div>
+    <button onclick="cerrarSesion()" style="background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Cerrar sesión</button>
+  </header>
+
+  <div class="dash-grid">
+    <div class="dash-card"><div class="dash-num" id="dashPendientes">…</div><div class="dash-label">Solicitudes<br>pendientes</div></div>
+    <div class="dash-card"><div class="dash-num" id="dashCompletadas">…</div><div class="dash-label">Solicitudes<br>completadas</div></div>
+  </div>
+
+  <div class="menu-card" onclick="irASeleccionarEspacio()">
+    <h3>📅 Agenda Quirúrgica</h3>
+    <p>Ver el calendario y solicitar materiales para un procedimiento.</p>
+  </div>
+  <div class="menu-card" onclick="irAPendientes()">
+    <h3>📤 Solicitudes Enviadas Pendientes</h3>
+    <p>Solicitudes que Logística todavía no ha procesado.</p>
+  </div>
+  <div class="menu-card" onclick="irACompletadas()">
+    <h3>✅ Solicitudes Completadas</h3>
+    <p>Solicitudes ya procesadas por Logística.</p>
+  </div>
+  <div class="menu-card" onclick="irACambiarPassword()">
+    <h3>🔑 Cambiar mi Contraseña</h3>
+    <p>Actualizar tu propia contraseña de acceso.</p>
+  </div>
+</div>
+
+<!-- ============ SELECCIONAR SEDE Y ESPACIO ============ -->
+<div class="wrap hidden" id="seleccionarEspacioView">
+  <div class="topbar">
+    <button onclick="volverAlMenu()">← Panel</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2>Agenda Quirúrgica</h2>
+    <div id="seMsg"></div>
+    <div class="field">
+      <label>Sede</label>
+      <select id="sel-sede" onchange="actualizarEspaciosDisponibles()"></select>
+    </div>
+    <div class="field">
+      <label>Espacio</label>
+      <select id="sel-espacio"></select>
+    </div>
+    <button class="btn btn-primary" onclick="irACalendario()">Ver Calendario</button>
+  </div>
+</div>
+
+<!-- ============ CALENDARIO MENSUAL ============ -->
+<div class="wrap hidden" id="calendarioView">
+  <div class="topbar">
+    <button onclick="showView('seleccionarEspacioView')">← Cambiar sede/espacio</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2 id="calTitulo">Calendario</h2>
+    <div class="cal-nav">
+      <button onclick="cambiarMes(-1)">‹</button>
+      <div class="mes-label" id="calMesLabel"></div>
+      <button onclick="cambiarMes(1)">›</button>
+    </div>
+    <div class="cal-grid" id="calGridDow"></div>
+    <div class="cal-grid" id="calGrid" style="margin-top:4px;"></div>
+  </div>
+</div>
+
+<!-- ============ VISTA DE DÍA (24 HORAS) ============ -->
+<div class="wrap hidden" id="diaView">
+  <div class="topbar">
+    <button onclick="showView('calendarioView')">← Calendario</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2 id="diaTitulo">Día</h2>
+    <p class="hint">El horario de 7:00 AM a 7:00 PM aparece resaltado (horario regular). En rojo: pendientes de Logística. En verde: ya completadas.</p>
+    <div id="diaLista"></div>
+  </div>
+</div>
+
+<!-- ============ FORMULARIO DE SOLICITUD DE MATERIALES ============ -->
+<div class="wrap hidden" id="solicitudFormView">
+  <div class="topbar">
+    <button onclick="volverDesdeFormulario()">← Volver</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2 id="sfTitulo">Solicitud de Materiales Externos</h2>
+    <div id="sfMsg"></div>
+    <div id="sfEstadoBadge" class="hint"></div>
+
+    <div class="row2">
+      <div class="field"><label>Fecha</label><input type="text" id="sf-fecha" readonly></div>
+      <div class="field"><label>Hora</label><input type="text" id="sf-hora" readonly></div>
+    </div>
+    <div class="field"><label>Sede / Espacio</label><input type="text" id="sf-sede-espacio" readonly></div>
+
+    <div class="field"><label>Nombre del procedimiento</label><input type="text" id="sf-procedimiento" autocomplete="off"></div>
+    <div class="field"><label>Nombre del médico</label><input type="text" id="sf-medico" autocomplete="off"></div>
+  </div>
+
+  <div class="card">
+    <h2>Registrar Materiales Solicitados</h2>
+    <div class="field typeahead-wrap">
+      <label>Proveedor</label>
+      <input type="text" id="sf-buscar-proveedor" autocomplete="off" placeholder="Escribe para buscar...">
+      <div class="typeahead-list hidden" id="sf-lista-proveedores"></div>
+    </div>
+    <div id="sf-proveedor-elegido" class="hint"></div>
+    <div class="field"><label>Qué se solicita de este proveedor</label><textarea id="sf-material-texto" placeholder="Ej. 2 bandejas de reducción de cadera, 1 juego de tornillos bloqueados 3.5mm"></textarea></div>
+    <button class="btn btn-secondary" onclick="agregarLineaProveedorCitas()">➕ Agregar a la lista</button>
+
+    <div id="sf-lineas" style="margin-top:14px;"></div>
+    <div class="empty-state" id="sf-lineas-empty">Todavía no agregas ningún proveedor.</div>
+  </div>
+
+  <div id="sfAccionesCrear">
+    <button class="btn btn-primary" onclick="enviarSolicitudCitas()">Enviar Solicitud a Logística</button>
+  </div>
+  <div id="sfAccionesEditar" class="hidden">
+    <button class="btn btn-primary" onclick="guardarEdicionSolicitudCitas()">Guardar Cambios</button>
+    <button class="btn btn-danger" onclick="cancelarSolicitudCitas()">Cancelar esta Solicitud</button>
+  </div>
+</div>
+
+<!-- ============ SOLICITUDES PENDIENTES ============ -->
+<div class="wrap hidden" id="pendientesView">
+  <div class="topbar">
+    <button onclick="volverAlMenu()">← Panel</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2>Solicitudes Enviadas Pendientes</h2>
+    <div id="pendMsg"></div>
+    <div id="pendLista"></div>
+    <div class="empty-state" id="pendEmpty">No hay solicitudes pendientes.</div>
+  </div>
+</div>
+
+<!-- ============ SOLICITUDES COMPLETADAS ============ -->
+<div class="wrap hidden" id="completadasView">
+  <div class="topbar">
+    <button onclick="volverAlMenu()">← Panel</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2>Solicitudes Completadas</h2>
+    <div id="compMsg"></div>
+    <div id="compLista"></div>
+    <div class="empty-state" id="compEmpty">No hay solicitudes completadas todavía.</div>
+  </div>
+</div>
+
+<!-- ============ CAMBIAR MI CONTRASEÑA ============ -->
+<div class="wrap hidden" id="cambiarPasswordView">
+  <div class="topbar">
+    <button onclick="volverAlMenu()">← Panel</button>
+    <button onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <h2>Cambiar mi Contraseña</h2>
+    <div id="cpwMsg"></div>
+    <div class="field"><label>Contraseña actual</label><input type="password" id="cpw-actual" autocomplete="off"></div>
+    <div class="field"><label>Contraseña nueva (mín. 8 caracteres)</label><input type="password" id="cpw-nueva" autocomplete="off"></div>
+    <button class="btn btn-primary" onclick="guardarCambioPassword()">Guardar</button>
+  </div>
+</div>
+
+<script>
+const WORKER_BASE_URL = "https://ceeps.lpirroe.workers.dev";
+
+function normalize(v){ return String(v||"").trim().toLowerCase(); }
+
+function showView(id){
+  ["loginView","menuView","seleccionarEspacioView","calendarioView","diaView","solicitudFormView","pendientesView","completadasView","cambiarPasswordView"].forEach(v=>{
+    document.getElementById(v).classList.toggle("hidden", v !== id);
+  });
+  window.scrollTo(0,0);
+}
+
+function volverAlMenu(){
+  actualizarDashboard();
+  showView("menuView");
+}
+
+// =========================================================================
+// SESIÓN
+// =========================================================================
+let sessionToken = null;
+let sessionUsuario = null;
+let sessionNombreCompleto = null;
+
+async function intentarLogin(){
+  const usuario = document.getElementById("loginUsuario").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const msg = document.getElementById("loginMsg");
+  msg.textContent = ""; msg.className = "login-msg";
+  if(!usuario || !password){ msg.textContent = "Escribe tu usuario y contraseña."; msg.className = "login-msg err"; return; }
+  msg.textContent = "Verificando..."; msg.className = "login-msg info";
+
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/auth-login`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ app: "citas", usuario, password })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      msg.textContent = data.message || ("No se pudo iniciar sesión: " + (data.reason || "desconocido"));
+      msg.className = "login-msg err";
+      return;
+    }
+    sessionToken = data.token;
+    sessionUsuario = data.usuario;
+    sessionNombreCompleto = data.nombreCompleto;
+    msg.textContent = "";
+    document.getElementById("loginUsuario").value = "";
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("dashNombreUsuario").textContent = sessionNombreCompleto || sessionUsuario;
+    await cargarSedesEspacios();
+    await actualizarDashboard();
+    showView("menuView");
+  }catch(err){
+    msg.textContent = "Error de conexión. Intente de nuevo.";
+    msg.className = "login-msg err";
+  }
+}
+
+function cerrarSesion(){
+  sessionToken = null; sessionUsuario = null; sessionNombreCompleto = null;
+  sedesEspacios = {}; sedeActual = ""; espacioActual = "";
+  solicitudEnEdicion = null; lineasProveedoresCitas = [];
+  document.getElementById("loginUsuario").value = "";
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginMsg").textContent = "";
+  showView("loginView");
+}
+
+async function actualizarDashboard(){
+  try{
+    const [resP, resC] = await Promise.all([
+      fetch(`${WORKER_BASE_URL}/api/citas-requests?token=${encodeURIComponent(sessionToken)}&estado=pendiente`),
+      fetch(`${WORKER_BASE_URL}/api/citas-requests?token=${encodeURIComponent(sessionToken)}&estado=procesada`),
+    ]);
+    const dataP = await resP.json();
+    const dataC = await resC.json();
+    document.getElementById("dashPendientes").textContent = dataP.ok ? dataP.solicitudes.length : "…";
+    document.getElementById("dashCompletadas").textContent = dataC.ok ? dataC.solicitudes.length : "…";
+  }catch(err){ /* se queda mostrando "…" */ }
+}
+
+document.getElementById("loginPassword").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") intentarLogin();
+});
+
+// =========================================================================
+// SEDES Y ESPACIOS
+// =========================================================================
+let sedesEspacios = {};
+let sedeActual = "";
+let espacioActual = "";
+
+async function cargarSedesEspacios(){
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-sedes-espacios`);
+    const data = await res.json();
+    if(data.ok) sedesEspacios = data.sedes;
+  }catch(err){ /* si falla, se completan al reintentar */ }
+}
+
+function irASeleccionarEspacio(){
+  document.getElementById("seMsg").innerHTML = "";
+  const selSede = document.getElementById("sel-sede");
+  selSede.innerHTML = Object.keys(sedesEspacios).map(s => `<option value="${s}">${s}</option>`).join("");
+  actualizarEspaciosDisponibles();
+  showView("seleccionarEspacioView");
+}
+
+function actualizarEspaciosDisponibles(){
+  const sede = document.getElementById("sel-sede").value;
+  const selEspacio = document.getElementById("sel-espacio");
+  const espacios = sedesEspacios[sede] || [];
+  selEspacio.innerHTML = espacios.map(e => `<option value="${e}">${e}</option>`).join("");
+}
+
+// =========================================================================
+// CALENDARIO MENSUAL
+// =========================================================================
+let calAño, calMes; // calMes: 0-11
+const NOMBRES_MES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const NOMBRES_DOW = ["dom","lun","mar","mié","jue","vie","sáb"];
+
+function irACalendario(){
+  sedeActual = document.getElementById("sel-sede").value;
+  espacioActual = document.getElementById("sel-espacio").value;
+  if(!sedeActual || !espacioActual){ document.getElementById("seMsg").innerHTML = `<div class="msgbox err">Elige sede y espacio.</div>`; return; }
+  const hoy = new Date();
+  calAño = hoy.getFullYear();
+  calMes = hoy.getMonth();
+  document.getElementById("calTitulo").textContent = `${sedeActual} — ${espacioActual}`;
+  renderCalendarioMes();
+  showView("calendarioView");
+}
+
+function cambiarMes(delta){
+  calMes += delta;
+  if(calMes < 0){ calMes = 11; calAño--; }
+  if(calMes > 11){ calMes = 0; calAño++; }
+  renderCalendarioMes();
+}
+
+function renderCalendarioMes(){
+  document.getElementById("calMesLabel").textContent = `${NOMBRES_MES[calMes]} ${calAño}`;
+  document.getElementById("calGridDow").innerHTML = NOMBRES_DOW.map(d => `<div class="cal-dow">${d}</div>`).join("");
+
+  const primerDia = new Date(calAño, calMes, 1);
+  const inicioGrid = new Date(primerDia);
+  inicioGrid.setDate(primerDia.getDate() - primerDia.getDay());
+  const hoyStr = new Date().toISOString().slice(0,10);
+
+  let celdas = "";
+  for(let i = 0; i < 42; i++){
+    const d = new Date(inicioGrid);
+    d.setDate(inicioGrid.getDate() + i);
+    const esMesActual = d.getMonth() === calMes;
+    const iso = d.toISOString().slice(0,10);
+    const clases = ["cal-day", esMesActual ? "actual" : "otro-mes", iso === hoyStr ? "hoy" : ""].join(" ");
+    celdas += `<div class="${clases}" ${esMesActual ? `onclick="abrirDia('${iso}')"` : ""}>${d.getDate()}</div>`;
+  }
+  document.getElementById("calGrid").innerHTML = celdas;
+}
+
+// =========================================================================
+// VISTA DE DÍA (24 HORAS)
+// =========================================================================
+let diaSeleccionadoISO = "";
+let solicitudesDelDia = [];
+
+function formatearFechaLarga(iso){
+  const [y,m,d] = iso.split("-");
+  const fecha = new Date(Number(y), Number(m)-1, Number(d));
+  const dow = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"][fecha.getDay()];
+  return `${dow} ${d}/${m}/${y}`;
+}
+
+async function abrirDia(iso){
+  diaSeleccionadoISO = iso;
+  document.getElementById("diaTitulo").textContent = `${formatearFechaLarga(iso)} — ${sedeActual} / ${espacioActual}`;
+  document.getElementById("diaLista").innerHTML = `<div class="empty-state">Cargando...</div>`;
+  showView("diaView");
+
+  try{
+    const params = new URLSearchParams({ token: sessionToken, fecha: iso, sede: sedeActual, espacio: espacioActual });
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-requests?${params.toString()}`);
+    const data = await res.json();
+    solicitudesDelDia = data.ok ? data.solicitudes.filter(s => s.estado !== "cancelada") : [];
+    renderDiaView();
+  }catch(err){
+    document.getElementById("diaLista").innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+
+function renderDiaView(){
+  const porHora = {};
+  solicitudesDelDia.forEach(s => { porHora[s.hora_procedimiento] = s; });
+
+  let html = "";
+  for(let h = 0; h < 24; h++){
+    const horaStr = String(h).padStart(2,"0") + ":00";
+    const horarioRegular = h >= 7 && h < 19;
+    const sol = porHora[horaStr];
+    let claseExtra = horarioRegular ? "horario-regular" : "";
+    let contenido = `<span class="libre">Libre</span>`;
+    let onclick = `abrirFormularioNuevo('${diaSeleccionadoISO}', '${horaStr}')`;
+
+    if(sol){
+      claseExtra = sol.estado === "procesada" ? "ocupada-completada" : "ocupada-pendiente";
+      contenido = `<div class="nombre-proc">${sol.procedimiento}</div><div class="sub-proc">Dr(a). ${sol.medico} · ${sol.estado === "procesada" ? "Completada" : "Pendiente"}</div>`;
+      onclick = `abrirFormularioExistente(${JSON.stringify(sol).replace(/"/g,'&quot;')})`;
+    }
+
+    html += `<div class="dia-slot ${claseExtra}" onclick="${onclick}"><div class="hora">${horaStr}</div><div class="contenido">${contenido}</div></div>`;
+  }
+  document.getElementById("diaLista").innerHTML = html;
+}
+
+// =========================================================================
+// FORMULARIO DE SOLICITUD (crear / ver / editar)
+// =========================================================================
+let solicitudEnEdicion = null; // null = creando nueva; si no, objeto de la solicitud existente
+let lineasProveedoresCitas = [];
+let proveedorSeleccionadoCitas = null;
+
+function volverDesdeFormulario(){
+  showView("diaView");
+}
+
+function abrirFormularioNuevo(fecha, hora){
+  solicitudEnEdicion = null;
+  lineasProveedoresCitas = [];
+  proveedorSeleccionadoCitas = null;
+
+  document.getElementById("sfTitulo").textContent = "Nueva Solicitud de Materiales";
+  document.getElementById("sfEstadoBadge").innerHTML = "";
+  document.getElementById("sfMsg").innerHTML = "";
+  document.getElementById("sf-fecha").value = formatearFechaLarga(fecha);
+  document.getElementById("sf-fecha").dataset.iso = fecha;
+  document.getElementById("sf-hora").value = hora;
+  document.getElementById("sf-sede-espacio").value = `${sedeActual} — ${espacioActual}`;
+  document.getElementById("sf-procedimiento").value = "";
+  document.getElementById("sf-medico").value = "";
+  document.getElementById("sf-buscar-proveedor").value = "";
+  document.getElementById("sf-proveedor-elegido").innerHTML = "";
+  document.getElementById("sf-material-texto").value = "";
+  renderLineasProveedoresCitas();
+
+  document.getElementById("sfAccionesCrear").classList.remove("hidden");
+  document.getElementById("sfAccionesEditar").classList.add("hidden");
+  showView("solicitudFormView");
+}
+
+function abrirFormularioExistente(sol){
+  solicitudEnEdicion = sol;
+  lineasProveedoresCitas = (sol.proveedores || []).map(p => ({ ...p }));
+  proveedorSeleccionadoCitas = null;
+
+  document.getElementById("sfTitulo").textContent = "Solicitud de Materiales";
+  document.getElementById("sfEstadoBadge").innerHTML = sol.estado === "procesada"
+    ? `<span class="flag" style="background:var(--ok-bg);color:var(--ok);">✓ Completada por Logística</span>`
+    : `<span class="flag" style="background:var(--implant-bg);color:var(--implant);">Pendiente de Logística</span>`;
+  document.getElementById("sfMsg").innerHTML = "";
+  document.getElementById("sf-fecha").value = formatearFechaLarga(sol.fecha_procedimiento);
+  document.getElementById("sf-fecha").dataset.iso = sol.fecha_procedimiento;
+  document.getElementById("sf-hora").value = sol.hora_procedimiento;
+  document.getElementById("sf-sede-espacio").value = `${sol.sede} — ${sol.espacio}`;
+  document.getElementById("sf-procedimiento").value = sol.procedimiento;
+  document.getElementById("sf-medico").value = sol.medico;
+  document.getElementById("sf-buscar-proveedor").value = "";
+  document.getElementById("sf-proveedor-elegido").innerHTML = "";
+  document.getElementById("sf-material-texto").value = "";
+  renderLineasProveedoresCitas();
+
+  document.getElementById("sfAccionesCrear").classList.add("hidden");
+  document.getElementById("sfAccionesEditar").classList.remove("hidden");
+  showView("solicitudFormView");
+}
+
+document.getElementById("sf-buscar-proveedor").addEventListener("input", ()=>{
+  const q = document.getElementById("sf-buscar-proveedor").value.trim();
+  const lista = document.getElementById("sf-lista-proveedores");
+  if(!q){ lista.classList.add("hidden"); lista.innerHTML=""; return; }
+  buscarProveedoresCitas(q);
+});
+
+let _buscarProveedoresTimeout = null;
+function buscarProveedoresCitas(q){
+  clearTimeout(_buscarProveedoresTimeout);
+  _buscarProveedoresTimeout = setTimeout(async ()=>{
+    try{
+      const res = await fetch(`${WORKER_BASE_URL}/api/logistics-search-providers?password=${encodeURIComponent(sessionToken)}&query=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      const lista = document.getElementById("sf-lista-proveedores");
+      if(!data.ok || data.resultados.length === 0){
+        lista.innerHTML = `<div class="typeahead-empty">Sin resultados.</div>`;
+        lista.classList.remove("hidden");
+        return;
+      }
+      lista.innerHTML = data.resultados.map((r,i) => `
+        <div class="item" data-idx="${i}">
+          <div>${r.codigo}</div>
+          <div class="sub">${r.nombres.join(" · ") || "Sin nombre"}</div>
+        </div>
+      `).join("");
+      lista.classList.remove("hidden");
+      lista.querySelectorAll(".item").forEach((el, idx)=>{
+        el.addEventListener("click", ()=>{
+          const r = data.resultados[idx];
+          proveedorSeleccionadoCitas = { codigo_proveedor: r.codigo, nombre_proveedor: r.nombres[0] || r.codigo };
+          document.getElementById("sf-buscar-proveedor").value = r.nombres[0] || r.codigo;
+          document.getElementById("sf-proveedor-elegido").textContent = `✓ Proveedor elegido: ${proveedorSeleccionadoCitas.nombre_proveedor} (${r.codigo})`;
+          lista.classList.add("hidden");
+        });
+      });
+    }catch(err){ /* si falla la búsqueda, simplemente no aparecen resultados */ }
+  }, 250);
+}
+
+function agregarLineaProveedorCitas(){
+  const texto = document.getElementById("sf-material-texto").value.trim();
+  if(!proveedorSeleccionadoCitas){ alert("Busca y elige un proveedor primero."); return; }
+  if(!texto){ alert("Escribe qué se solicita de este proveedor."); return; }
+  if(lineasProveedoresCitas.some(l => l.codigo_proveedor === proveedorSeleccionadoCitas.codigo_proveedor)){
+    alert("Ese proveedor ya está en la lista. Quítalo primero si quieres cambiar lo solicitado.");
+    return;
+  }
+  lineasProveedoresCitas.push({ ...proveedorSeleccionadoCitas, descripcion: texto });
+  renderLineasProveedoresCitas();
+  proveedorSeleccionadoCitas = null;
+  document.getElementById("sf-buscar-proveedor").value = "";
+  document.getElementById("sf-proveedor-elegido").innerHTML = "";
+  document.getElementById("sf-material-texto").value = "";
+}
+
+function renderLineasProveedoresCitas(){
+  const wrap = document.getElementById("sf-lineas");
+  const empty = document.getElementById("sf-lineas-empty");
+  if(lineasProveedoresCitas.length === 0){ wrap.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  wrap.innerHTML = lineasProveedoresCitas.map((l,i) => `
+    <div class="catalog-item">
+      <div class="meta"><div class="name">${l.nombre_proveedor}</div><div class="sub">${l.descripcion}</div></div>
+      <div class="actions"><button onclick="quitarLineaProveedorCitas(${i})">Quitar</button></div>
+    </div>
+  `).join("");
+}
+
+function quitarLineaProveedorCitas(i){
+  lineasProveedoresCitas.splice(i,1);
+  renderLineasProveedoresCitas();
+}
+
+function datosFormularioCitas(){
+  return {
+    fecha_procedimiento: document.getElementById("sf-fecha").dataset.iso,
+    hora_procedimiento: document.getElementById("sf-hora").value,
+    sede: sedeActual,
+    espacio: espacioActual,
+    procedimiento: document.getElementById("sf-procedimiento").value.trim(),
+    medico: document.getElementById("sf-medico").value.trim(),
+    proveedores: lineasProveedoresCitas,
+  };
+}
+
+async function enviarSolicitudCitas(){
+  const msg = document.getElementById("sfMsg");
+  msg.innerHTML = "";
+  const datos = datosFormularioCitas();
+  if(!datos.procedimiento || !datos.medico){ msg.innerHTML = `<div class="msgbox err">Completa el procedimiento y el médico.</div>`; return; }
+  if(datos.proveedores.length === 0){ msg.innerHTML = `<div class="msgbox err">Agrega al menos un proveedor con lo que se le solicita.</div>`; return; }
+
+  msg.innerHTML = `<div class="msgbox warn">Enviando...</div>`;
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-create-request`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ token: sessionToken, ...datos })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      msg.innerHTML = `<div class="msgbox err">${data.message || ("No se pudo enviar: " + (data.reason || "desconocido"))}</div>`;
+      return;
+    }
+    alert("Solicitud enviada a Logística.");
+    await abrirDia(diaSeleccionadoISO);
+    showView("diaView");
+  }catch(err){
+    msg.innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+
+async function guardarEdicionSolicitudCitas(){
+  if(!solicitudEnEdicion) return;
+  const msg = document.getElementById("sfMsg");
+  msg.innerHTML = "";
+  const datos = datosFormularioCitas();
+  if(!datos.procedimiento || !datos.medico){ msg.innerHTML = `<div class="msgbox err">Completa el procedimiento y el médico.</div>`; return; }
+  if(datos.proveedores.length === 0){ msg.innerHTML = `<div class="msgbox err">Agrega al menos un proveedor con lo que se le solicita.</div>`; return; }
+
+  msg.innerHTML = `<div class="msgbox warn">Guardando...</div>`;
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-update-request`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ token: sessionToken, id: solicitudEnEdicion.id, ...datos })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      msg.innerHTML = `<div class="msgbox err">${data.message || ("No se pudo guardar: " + (data.reason || "desconocido"))}</div>`;
+      return;
+    }
+    alert("Cambios guardados.");
+    await abrirDia(diaSeleccionadoISO);
+    showView("diaView");
+  }catch(err){
+    msg.innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+
+async function cancelarSolicitudCitas(){
+  if(!solicitudEnEdicion) return;
+  if(!confirm("¿Seguro que quieres cancelar esta solicitud? Se notificará a cada proveedor involucrado.")) return;
+  const msg = document.getElementById("sfMsg");
+  msg.innerHTML = `<div class="msgbox warn">Cancelando...</div>`;
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-cancel-request`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ token: sessionToken, id: solicitudEnEdicion.id })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      msg.innerHTML = `<div class="msgbox err">${data.message || ("No se pudo cancelar: " + (data.reason || "desconocido"))}</div>`;
+      return;
+    }
+    alert("Solicitud cancelada.");
+    await abrirDia(diaSeleccionadoISO);
+    showView("diaView");
+  }catch(err){
+    msg.innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+
+// =========================================================================
+// DASHBOARDS: PENDIENTES / COMPLETADAS
+// =========================================================================
+async function irAPendientes(){
+  const msg = document.getElementById("pendMsg");
+  msg.innerHTML = `<div class="msgbox warn">Cargando...</div>`;
+  document.getElementById("pendLista").innerHTML = "";
+  document.getElementById("pendEmpty").style.display = "none";
+  showView("pendientesView");
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-requests?token=${encodeURIComponent(sessionToken)}&estado=pendiente`);
+    const data = await res.json();
+    if(!data.ok){ msg.innerHTML = `<div class="msgbox err">${data.message || "No se pudo cargar."}</div>`; return; }
+    msg.innerHTML = "";
+    if(data.solicitudes.length === 0){ document.getElementById("pendEmpty").style.display = "block"; return; }
+    document.getElementById("pendLista").innerHTML = data.solicitudes.map(s => `
+      <div class="catalog-item">
+        <div class="meta">
+          <div class="name">${s.procedimiento}</div>
+          <div class="sub">${formatearFechaLarga(s.fecha_procedimiento)} ${s.hora_procedimiento} · ${s.sede} — ${s.espacio}</div>
+        </div>
+        <div class="actions"><button onclick='abrirDesdeListaCitas(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Ver</button></div>
+      </div>
+    `).join("");
+  }catch(err){
+    msg.innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+
+async function irACompletadas(){
+  const msg = document.getElementById("compMsg");
+  msg.innerHTML = `<div class="msgbox warn">Cargando...</div>`;
+  document.getElementById("compLista").innerHTML = "";
+  document.getElementById("compEmpty").style.display = "none";
+  showView("completadasView");
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/citas-requests?token=${encodeURIComponent(sessionToken)}&estado=procesada`);
+    const data = await res.json();
+    if(!data.ok){ msg.innerHTML = `<div class="msgbox err">${data.message || "No se pudo cargar."}</div>`; return; }
+    msg.innerHTML = "";
+    if(data.solicitudes.length === 0){ document.getElementById("compEmpty").style.display = "block"; return; }
+    document.getElementById("compLista").innerHTML = data.solicitudes.map(s => `
+      <div class="catalog-item">
+        <div class="meta">
+          <div class="name">${s.procedimiento}</div>
+          <div class="sub">${formatearFechaLarga(s.fecha_procedimiento)} ${s.hora_procedimiento} · ${s.sede} — ${s.espacio}</div>
+        </div>
+        <div class="actions"><button onclick='abrirDesdeListaCitas(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Ver</button></div>
+      </div>
+    `).join("");
+  }catch(err){
+    msg.innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+
+function abrirDesdeListaCitas(sol){
+  sedeActual = sol.sede;
+  espacioActual = sol.espacio;
+  diaSeleccionadoISO = sol.fecha_procedimiento;
+  abrirFormularioExistente(sol);
+}
+
+// =========================================================================
+// CAMBIAR MI CONTRASEÑA
+// =========================================================================
+function irACambiarPassword(){
+  document.getElementById("cpwMsg").innerHTML = "";
+  document.getElementById("cpw-actual").value = "";
+  document.getElementById("cpw-nueva").value = "";
+  showView("cambiarPasswordView");
+}
+
+async function guardarCambioPassword(){
+  const passwordActual = document.getElementById("cpw-actual").value;
+  const passwordNueva = document.getElementById("cpw-nueva").value;
+  const msg = document.getElementById("cpwMsg");
+  msg.innerHTML = "";
+  if(!passwordActual || !passwordNueva){ msg.innerHTML = `<div class="msgbox err">Completa ambos campos.</div>`; return; }
+  if(passwordNueva.length < 8){ msg.innerHTML = `<div class="msgbox err">La nueva contraseña debe tener al menos 8 caracteres.</div>`; return; }
+
+  msg.innerHTML = `<div class="msgbox warn">Guardando...</div>`;
+  try{
+    const res = await fetch(`${WORKER_BASE_URL}/api/auth-change-password`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ token: sessionToken, password_actual: passwordActual, password_nueva: passwordNueva })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      msg.innerHTML = `<div class="msgbox err">${data.message || ("No se pudo cambiar: " + (data.reason || "desconocido"))}</div>`;
+      return;
+    }
+    msg.innerHTML = `<div class="msgbox ok">Contraseña actualizada.</div>`;
+    document.getElementById("cpw-actual").value = "";
+    document.getElementById("cpw-nueva").value = "";
+  }catch(err){
+    msg.innerHTML = `<div class="msgbox err">Error de conexión. Intenta de nuevo.</div>`;
+  }
+}
+</script>
+</body>
+</html>
